@@ -23,8 +23,11 @@ namespace hc2ha
             var hc2ha = new hc2ha();
             hc2ha.Start();
             
-            // keep running until keypress
-            Console.ReadLine();
+            // keep running
+            while (true)
+            {
+                Thread.Sleep(100000);
+            }
 
         }
     }
