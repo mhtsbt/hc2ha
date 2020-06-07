@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Net.Http;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -26,7 +27,15 @@ namespace hc2ha
             // keep running
             while (true)
             {
+                
                 Thread.Sleep(100000);
+                
+                // exit if one of the clients was disconnected
+                if (!hc2ha.IsConnected())
+                {
+                    return;
+                }
+
             }
 
         }

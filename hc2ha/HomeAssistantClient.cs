@@ -53,6 +53,11 @@ namespace hc2ha
 
         }
 
+        public bool IsConnected()
+        {
+            return _mqttClient.IsConnected;
+        }
+
         private async Task SetStateOfLight(string uuid, string state)
         {
             var message = new MqttApplicationMessageBuilder()

@@ -15,6 +15,11 @@ namespace hc2ha
             _haClient = new HomeAssistantClient(_hcClient);
         }
 
+        public bool IsConnected()
+        {
+            return _haClient.IsConnected() & _haClient.IsConnected();
+        }
+
         public async void Start()
         {
 

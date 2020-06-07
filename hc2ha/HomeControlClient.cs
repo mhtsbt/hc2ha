@@ -115,5 +115,9 @@ namespace hc2ha
             await _mqttClient.PublishAsync(message, CancellationToken.None);
         }
 
+        public bool IsConnected()
+        {
+            return _mqttClient.IsConnected;
+        }
     }
 }
