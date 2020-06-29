@@ -44,6 +44,7 @@ namespace hc2ha
             {
                 Console.WriteLine("Connected with HomeControl hub");
             });
+            
         }
         
         public async Task Connect(string ip, string password)
@@ -65,6 +66,10 @@ namespace hc2ha
                 .Build();
             
             await _mqttClient.ConnectAsync(options, CancellationToken.None);
+            
+            
+            //await _mqttClient.SubscribeAsync(new TopicFilterBuilder().WithTopic("hobby/control/devices/evt").Build());
+            
         }
 
         public async Task<List<Device>> GetDevices()
