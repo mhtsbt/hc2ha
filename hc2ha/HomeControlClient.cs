@@ -27,8 +27,13 @@ namespace hc2ha
 
             _mqttClient.UseApplicationMessageReceivedHandler(e =>
             {
+
+                string payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
                 
-                var deviceList = JsonSerializer.Deserialize<DeviceListModel>(Encoding.UTF8.GetString(e.ApplicationMessage.Payload));
+                var deviceList = JsonSerializer.Deserialize<DeviceListModel>(payload);
+                
+                // TODO: respond differently to different topics
+                
                 _devices = deviceList.Params[0].Devices;
 
                 var lights = deviceList.Params.First().Devices.Where(x => x.Model == "light" & x.Type == "action");
@@ -68,7 +73,7 @@ namespace hc2ha
             await _mqttClient.ConnectAsync(options, CancellationToken.None);
             
             
-            //await _mqttClient.SubscribeAsync(new TopicFilterBuilder().WithTopic("hobby/control/devices/evt").Build());
+            await _mqttClient.SubscribeAsync(new TopicFilterBuilder().WithTopic("hobby/control/devices/evt").Build());
             
         }
 

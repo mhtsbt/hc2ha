@@ -29,10 +29,10 @@ namespace hc2ha
             
             // connect both clients
             Console.WriteLine("Connecting clients");
-            await _haClient.Connect(ha_ip);
+            //await _haClient.Connect(ha_ip);
             await _hcClient.Connect(hc_ip, hc_password);
 
-            RegisterDevices();
+           // RegisterDevices();
         }
 
         public async void RegisterDevices()
