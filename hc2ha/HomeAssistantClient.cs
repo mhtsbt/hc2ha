@@ -4,6 +4,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using hc2ha.Models;
 using MQTTnet;
 using MQTTnet.Client;
 using MQTTnet.Client.Options;
@@ -41,16 +42,20 @@ namespace hc2ha
                     if (payload == "{\"state\": \"ON\"}")
                     {
                        await _hcClient.TurnLightOn(device_uuid);
-                       await SetStateOfLight(device_uuid, "ON");
                     }
                     else
                     {
                         await _hcClient.TurnLightOff(device_uuid);
-                        await SetStateOfLight(device_uuid, "OFF");
                     }
                 }
             });
 
+        }
+        
+        public async void DeviceStateChanged(object sender, DeviceStatusChangedEvent e)
+        {
+            // HC changed the state of a device
+            await SetStateOfLight(e.DeviceId, e.NewState);
         }
 
         public bool IsConnected()
@@ -60,6 +65,9 @@ namespace hc2ha
 
         private async Task SetStateOfLight(string uuid, string state)
         {
+
+            state = state.ToUpper();
+            
             var message = new MqttApplicationMessageBuilder()
                 .WithTopic("homeassistant/" + uuid + "/state")
                 .WithPayload("{\"state\":\""+state+"\"}")
@@ -89,6 +97,23 @@ namespace hc2ha
             var message = new MqttApplicationMessageBuilder()
                 .WithTopic($"homeassistant/light/{uuid}/config")
                 .WithPayload("{\"~\": \"homeassistant/"+uuid+"\",\"name\": \""+name+"\", \"unique_id\": \""+uuid+"\", \"cmd_t\": \"~/set\", \"stat_t\": \"~/state\", \"schema\": \"json\", \"brightness\": false}")
+                .WithExactlyOnceQoS()
+                .WithRetainFlag()
+                .Build();
+
+            await _mqttClient.PublishAsync(message, CancellationToken.None);
+
+            await _mqttClient.SubscribeAsync("homeassistant/" + uuid + "/set");
+
+        }
+        
+        public async Task RegisterSwitch(string name, string uuid)
+        {
+            name = name.Replace(' ', '_').ToLower();
+            
+            var message = new MqttApplicationMessageBuilder()
+                .WithTopic($"homeassistant/switch/{uuid}/config")
+                .WithPayload("{\"~\": \"homeassistant/"+uuid+"\",\"name\": \""+name+"\", \"cmd_t\": \"~/set\", \"stat_t\": \"~/state\"}")
                 .WithExactlyOnceQoS()
                 .WithRetainFlag()
                 .Build();

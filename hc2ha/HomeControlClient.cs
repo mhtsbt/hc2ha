@@ -18,6 +18,8 @@ namespace hc2ha
     {
         private readonly IMqttClient _mqttClient;
         private List<Device> _devices;
+        
+        public event EventHandler<DeviceStatusChangedEvent> DeviceStateChanged;
 
         public HomeControlClient()
         {
@@ -29,20 +31,18 @@ namespace hc2ha
             {
 
                 string payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
-                
-                var deviceList = JsonSerializer.Deserialize<DeviceListModel>(payload);
-                
-                // TODO: respond differently to different topics
-                
-                _devices = deviceList.Params[0].Devices;
+                string topic = e.ApplicationMessage.Topic;
 
-                var lights = deviceList.Params.First().Devices.Where(x => x.Model == "light" & x.Type == "action");
-
-                foreach (var light in lights)
+                if (topic == "hobby/control/devices/evt")
                 {
-                    Console.WriteLine("- Found light "+light.Name);
+                    DeviceChangedMessage msg = JsonSerializer.Deserialize<DeviceChangedMessage>(payload);
+                    OnDeviceStateChanged(new DeviceStatusChangedEvent(msg.Params[0].Devices[0].Uuid, msg.Params[0].Devices[0].Properties[0].Status));
                 }
-                
+                else if (topic == "hobby/control/devices/rsp")
+                {
+                    RegisterDevices(payload);
+                }
+
             });
             
             _mqttClient.UseConnectedHandler(e =>
@@ -50,6 +50,37 @@ namespace hc2ha
                 Console.WriteLine("Connected with HomeControl hub");
             });
             
+        }
+
+        private void RegisterDevices(string payload)
+        {
+            var deviceList = JsonSerializer.Deserialize<DeviceListModel>(payload);
+            _devices = deviceList.Params[0].Devices;
+
+            var lights = deviceList.Params.First().Devices.Where(x => x.Model == "light" & x.Type == "action");
+            var virtual_devices = deviceList.Params.First().Devices.Where(x => x.Type == "virtual");
+            
+            foreach (var light in lights)
+            {
+                Console.WriteLine("- Found light "+light.Name);
+            }
+            
+            foreach (var device in virtual_devices)
+            {
+                Console.WriteLine("- Found virtual device "+device.Name);
+            }
+            
+            
+        }
+        
+        protected virtual void OnDeviceStateChanged(DeviceStatusChangedEvent e)
+        {
+            
+            EventHandler<DeviceStatusChangedEvent> handler = DeviceStateChanged;
+            if (handler != null)
+            {
+                handler(this, e);
+            }
         }
         
         public async Task Connect(string ip, string password)

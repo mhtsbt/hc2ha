@@ -29,10 +29,12 @@ namespace hc2ha
             
             // connect both clients
             Console.WriteLine("Connecting clients");
-            //await _haClient.Connect(ha_ip);
+            await _haClient.Connect(ha_ip);
             await _hcClient.Connect(hc_ip, hc_password);
+            
+            _hcClient.DeviceStateChanged += _haClient.DeviceStateChanged;
 
-           // RegisterDevices();
+            RegisterDevices();
         }
 
         public async void RegisterDevices()
@@ -45,6 +47,9 @@ namespace hc2ha
                 if (device.Model == "light")
                 {
                    await _haClient.RegisterLight(device.Name, device.Uuid);
+                } else if (device.Type == "virtual")
+                {
+                    await _haClient.RegisterSwitch(device.Name, device.Uuid);
                 }
             }
             

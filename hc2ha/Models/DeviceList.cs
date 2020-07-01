@@ -23,6 +23,7 @@ public class Device
     public string Identifier { get; set; }
     //public List<Dictionary<string, PropertyDefinition>> PropertyDefinitions { get; set; }
     public string Online { get; set; }
+    public Property[] Properties { get; set; }
     public string Model { get; set; }
    // public List<Trait> Traits { get; set; }
     public string Type { get; set; }
