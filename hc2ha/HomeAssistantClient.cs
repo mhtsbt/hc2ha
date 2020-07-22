@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -54,8 +55,18 @@ namespace hc2ha
         
         public async void DeviceStateChanged(object sender, DeviceStatusChangedEvent e)
         {
-            // HC changed the state of a device
-            await SetStateOfLight(e.DeviceId, e.NewState);
+
+            var devices = await _hcClient.GetDevices();
+
+            if (devices.FirstOrDefault(x => x.Uuid == e.DeviceId).Model == "light")
+            {
+                // HC changed the state of a device
+                await SetStateOfLight(e.DeviceId, e.NewState);
+            }
+            else
+            {
+                await SetStateOfSwitch(e.DeviceId, e.NewState);
+            }
         }
 
         public bool IsConnected()
@@ -65,7 +76,6 @@ namespace hc2ha
 
         private async Task SetStateOfLight(string uuid, string state)
         {
-
             state = state.ToUpper();
             
             var message = new MqttApplicationMessageBuilder()
@@ -74,6 +84,22 @@ namespace hc2ha
                 .WithExactlyOnceQoS()
                 .WithRetainFlag()
                 .Build();
+
+            await _mqttClient.PublishAsync(message, CancellationToken.None);
+            
+        }
+        
+        private async Task SetStateOfSwitch(string uuid, string state)
+        {
+            state = state.ToUpper();
+            
+            var message = new MqttApplicationMessageBuilder()
+                .WithTopic("homeassistant/" + uuid + "/state")
+                .WithPayload(state)
+                .WithExactlyOnceQoS()
+                .WithRetainFlag()
+                .Build();
+            
 
             await _mqttClient.PublishAsync(message, CancellationToken.None);
             
@@ -113,7 +139,7 @@ namespace hc2ha
             
             var message = new MqttApplicationMessageBuilder()
                 .WithTopic($"homeassistant/switch/{uuid}/config")
-                .WithPayload("{\"~\": \"homeassistant/"+uuid+"\",\"name\": \""+name+"\", \"cmd_t\": \"~/set\", \"stat_t\": \"~/state\"}")
+                .WithPayload("{\"~\": \"homeassistant/"+uuid+"\",\"name\": \""+name+"\", \"command_topic\": \"~/set\", \"state_topic\": \"~/state\"}")
                 .WithExactlyOnceQoS()
                 .WithRetainFlag()
                 .Build();
