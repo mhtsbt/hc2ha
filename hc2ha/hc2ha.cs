@@ -47,7 +47,7 @@ namespace hc2ha
                 if (device.Model == "light")
                 {
                    await _haClient.RegisterLight(device.Name, device.Uuid);
-                } else if (device.Type == "action")
+                } else if (device.Type == "virtual")
                 {
                     await _haClient.RegisterSwitch(device.Name, device.Uuid);
                 }

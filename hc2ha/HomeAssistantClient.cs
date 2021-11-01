@@ -38,27 +38,44 @@ namespace hc2ha
                 string device_uuid = topic[1];
                 string cmd_name = topic[2];
 
-                if (cmd_name == "set")
+                var device = this._hcClient.GetDeviceByUuid(uuid: device_uuid);
+
+                if (device.Type == "relay")
                 {
-                    if (payload == "{\"state\": \"ON\"}")
+
+                    if (cmd_name == "set")
                     {
-                       await _hcClient.TurnLightOn(device_uuid);
+                        if (payload == "{\"state\": \"ON\"}")
+                        {
+                            await _hcClient.TurnLightOn(device_uuid);
+                        }
+                        else
+                        {
+                            await _hcClient.TurnLightOff(device_uuid);
+                        }
+                    }
+
+                } else if (device.Type == "virtual")
+                {
+                    if (payload == "ON")
+                    {
+                        await _hcClient.TurnVirtualOn(device_uuid);
                     }
                     else
                     {
-                        await _hcClient.TurnLightOff(device_uuid);
+                        await _hcClient.TurnVirtualOff(device_uuid);
                     }
                 }
+
             });
 
         }
         
         public async void DeviceStateChanged(object sender, DeviceStatusChangedEvent e)
         {
-
-            var devices = await _hcClient.GetDevices();
-
-            if (devices.FirstOrDefault(x => x.Uuid == e.DeviceId).Model == "light")
+            var device = _hcClient.GetDeviceByUuid(uuid: e.DeviceId);
+           
+            if (device.Model == "light")
             {
                 // HC changed the state of a device
                 await SetStateOfLight(e.DeviceId, e.NewState);
@@ -91,7 +108,17 @@ namespace hc2ha
         
         private async Task SetStateOfSwitch(string uuid, string state)
         {
+            Console.WriteLine($"state: {state}");
             state = state.ToUpper();
+
+            if (state == "FALSE")
+            {
+                state = "OFF";
+            }
+            else
+            {
+                state = "ON";
+            }
             
             var message = new MqttApplicationMessageBuilder()
                 .WithTopic("homeassistant/" + uuid + "/state")
@@ -109,7 +136,7 @@ namespace hc2ha
         {
             var options = new MqttClientOptionsBuilder()
                 .WithClientId("hc2ha")
-                .WithTcpServer(ip, 1883)
+                .WithTcpServer(ip, 18803)
                 .WithCleanSession()
                 .Build();
             

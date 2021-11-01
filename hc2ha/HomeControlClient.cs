@@ -36,7 +36,18 @@ namespace hc2ha
                 if (topic == "hobby/control/devices/evt")
                 {
                     DeviceChangedMessage msg = JsonSerializer.Deserialize<DeviceChangedMessage>(payload);
-                    OnDeviceStateChanged(new DeviceStatusChangedEvent(msg.Params[0].Devices[0].Uuid, msg.Params[0].Devices[0].Properties[0].Status));
+                    
+                    var uuid = msg.Params[0].Devices[0].Uuid;
+                    var device = GetDeviceByUuid(uuid: uuid);
+                    
+                    Console.WriteLine($"Change state uuid: {uuid} status: {msg.Params[0].Devices[0].Properties[0].Status} {device.Name} {device.Type}");
+
+                    if (device.Type == "virtual")
+                    {
+                        OnDeviceStateChanged(new DeviceStatusChangedEvent(msg.Params[0].Devices[0].Uuid,
+                            msg.Params[0].Devices[0].Properties[0].Status));
+                        
+                    }
                 }
                 else if (topic == "hobby/control/devices/rsp")
                 {
@@ -67,7 +78,7 @@ namespace hc2ha
             
             foreach (var device in virtual_devices)
             {
-                Console.WriteLine("- Found virtual device "+device.Name);
+                Console.WriteLine("- Found virtual device "+device.Name+" "+device.Uuid);
             }
             
             
@@ -108,6 +119,11 @@ namespace hc2ha
             
         }
 
+        public Device GetDeviceByUuid(string uuid)
+        {
+            return _devices.FirstOrDefault(x => x.Uuid == uuid);
+        }
+
         public async Task<List<Device>> GetDevices()
         {
             // empty the list 
@@ -130,6 +146,30 @@ namespace hc2ha
             }
 
             return _devices;
+        }
+        
+        public async Task TurnVirtualOn(string uuid)
+        {
+            var message = new MqttApplicationMessageBuilder()
+                .WithTopic("hobby/control/devices/cmd")
+                .WithPayload("{'Method': 'devices.control','Params': [{'Devices': [{'Properties': [{'Status': 'True'}],'Uuid': '"+uuid+"'}]}]}")
+                .WithExactlyOnceQoS()
+                .WithRetainFlag()
+                .Build();
+
+            await _mqttClient.PublishAsync(message, CancellationToken.None);
+        }
+        
+        public async Task TurnVirtualOff(string uuid)
+        {
+            var message = new MqttApplicationMessageBuilder()
+                .WithTopic("hobby/control/devices/cmd")
+                .WithPayload("{'Method': 'devices.control','Params': [{'Devices': [{'Properties': [{'Status': 'False'}],'Uuid': '"+uuid+"'}]}]}")
+                .WithExactlyOnceQoS()
+                .WithRetainFlag()
+                .Build();
+
+            await _mqttClient.PublishAsync(message, CancellationToken.None);
         }
 
         public async Task TurnLightOn(string uuid)
