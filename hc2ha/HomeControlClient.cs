@@ -40,7 +40,7 @@ namespace hc2ha
                     var uuid = msg.Params[0].Devices[0].Uuid;
                     var device = GetDeviceByUuid(uuid: uuid);
                     
-                    Console.WriteLine($"Change state uuid: {uuid} status: {msg.Params[0].Devices[0].Properties[0].Status} {device.Name} {device.Type}");
+                    Console.WriteLine($"Change state uuid: {uuid} status: {msg.Params[0].Devices[0].Properties[0].Status} name: {device.Name} type: {device.Type}");
 
                     if (device.Type == "virtual")
                     {
@@ -68,12 +68,12 @@ namespace hc2ha
             var deviceList = JsonSerializer.Deserialize<DeviceListModel>(payload);
             _devices = deviceList.Params[0].Devices;
 
-            var lights = deviceList.Params.First().Devices.Where(x => x.Model == "light" & x.Type == "action");
+            var lights = deviceList.Params.First().Devices.Where(x => (x.Type is "relay" or "smartrelay"));
             var virtual_devices = deviceList.Params.First().Devices.Where(x => x.Type == "virtual");
             
             foreach (var light in lights)
             {
-                Console.WriteLine("- Found light "+light.Name);
+                Console.WriteLine($"- Found light {light.Name} {light.Uuid}");
             }
             
             foreach (var device in virtual_devices)

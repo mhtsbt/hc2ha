@@ -40,7 +40,7 @@ namespace hc2ha
 
                 var device = this._hcClient.GetDeviceByUuid(uuid: device_uuid);
 
-                if (device.Type == "relay")
+                if (device.Type == "action" && device.Model == "light")
                 {
 
                     if (cmd_name == "set")
