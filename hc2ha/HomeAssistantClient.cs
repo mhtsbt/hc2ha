@@ -164,6 +164,9 @@ namespace hc2ha
         {
             name = name.Replace(' ', '_').ToLower();
             
+            Console.WriteLine($"homeassistant/switch/{uuid}/config");
+            Console.WriteLine("{\"~\": \"homeassistant/"+uuid+"\",\"name\": \""+name+"\", \"command_topic\": \"~/set\", \"state_topic\": \"~/state\"}");
+            
             var message = new MqttApplicationMessageBuilder()
                 .WithTopic($"homeassistant/switch/{uuid}/config")
                 .WithPayload("{\"~\": \"homeassistant/"+uuid+"\",\"name\": \""+name+"\", \"command_topic\": \"~/set\", \"state_topic\": \"~/state\"}")

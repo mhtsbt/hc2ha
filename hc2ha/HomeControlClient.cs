@@ -47,7 +47,12 @@ namespace hc2ha
                         OnDeviceStateChanged(new DeviceStatusChangedEvent(msg.Params[0].Devices[0].Uuid,
                             msg.Params[0].Devices[0].Properties[0].Status));
                         
+                    } else if (device.Model == "light")
+                    {
+                        OnDeviceStateChanged(new DeviceStatusChangedEvent(msg.Params[0].Devices[0].Uuid,
+                            msg.Params[0].Devices[0].Properties[0].Status));
                     }
+                    
                 }
                 else if (topic == "hobby/control/devices/rsp")
                 {
