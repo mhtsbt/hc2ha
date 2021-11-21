@@ -21,3 +21,8 @@ hc2ha:
     - HC_IP=xx.xx.xx.xx
     - HC_PASSWORD=xxx
 ```
+
+## Usage
+After starting the docker container all your lights and virtual outputs are automatically added to Home Assistant, you can then control them in Home Assistant as you would control any other switch or light.
+
+If you add new devices to the Home Control system, you need to restart the container, as devices are only discovered during startup.
