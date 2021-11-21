@@ -1,6 +1,4 @@
-# hc2ha
-Niko Home Control 2 Home Assistant
-
+# Niko Home Control 2 Home Assistant
 This is an MQTT-bridge which allows your Miko Home Control HobbyAPI devices to talk with Home Assistant. This is still a very early version, and still very work-in-progress. At the moment it currently supports lights and virtual outputs. You can use this application in order to control your lights and virtual outputs in Home Assistant. The project has been tested on the Niko HC Hub.
 
 ## Install
