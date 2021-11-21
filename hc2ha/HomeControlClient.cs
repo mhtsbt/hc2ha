@@ -71,27 +71,34 @@ namespace hc2ha
         private void RegisterDevices(string payload)
         {
             var deviceList = JsonSerializer.Deserialize<DeviceListModel>(payload);
-            _devices = deviceList.Params[0].Devices;
 
-            var lights = deviceList.Params.First().Devices.Where(x => (x.Type is "relay" or "smartrelay"));
-            var virtual_devices = deviceList.Params.First().Devices.Where(x => x.Type == "virtual");
-            
-            foreach (var light in lights)
+            if (deviceList != null)
             {
-                Console.WriteLine($"- Found light {light.Name} {light.Uuid}");
+                _devices = deviceList.Params[0].Devices;
+
+                var lights = deviceList.Params.First().Devices.Where(x => (x.Type is "relay" or "smartrelay"));
+                var virtualDevices = deviceList.Params.First().Devices.Where(x => x.Type == "virtual");
+
+                foreach (var light in lights)
+                {
+                    Console.WriteLine($"- Found light {light.Name} {light.Uuid}");
+                }
+
+                foreach (var device in virtualDevices)
+                {
+                    Console.WriteLine("- Found virtual device " + device.Name + " " + device.Uuid);
+                }
+
             }
-            
-            foreach (var device in virtual_devices)
+            else
             {
-                Console.WriteLine("- Found virtual device "+device.Name+" "+device.Uuid);
+                Console.WriteLine("Could not find any devices");
             }
-            
-            
+
         }
         
         protected virtual void OnDeviceStateChanged(DeviceStatusChangedEvent e)
         {
-            
             EventHandler<DeviceStatusChangedEvent> handler = DeviceStateChanged;
             if (handler != null)
             {
@@ -102,8 +109,7 @@ namespace hc2ha
         public async Task Connect(string ip, string password)
         {
             var options = new MqttClientOptionsBuilder()
-                .WithClientId("hc2ha")
-                .WithTcpServer("10.0.3.29", 8884)
+                .WithTcpServer(ip, 8884)
                 .WithCredentials("hobby", password)
                 .WithTls(new MqttClientOptionsBuilderTlsParameters
                 {
@@ -118,8 +124,6 @@ namespace hc2ha
                 .Build();
             
             await _mqttClient.ConnectAsync(options, CancellationToken.None);
-            
-            
             await _mqttClient.SubscribeAsync(new TopicFilterBuilder().WithTopic("hobby/control/devices/evt").Build());
             
         }
@@ -142,7 +146,6 @@ namespace hc2ha
                 .Build();
             
             await _mqttClient.SubscribeAsync(new TopicFilterBuilder().WithTopic("hobby/control/devices/rsp").Build());
-
             await _mqttClient.PublishAsync(message, CancellationToken.None);
 
             while (_devices == null)

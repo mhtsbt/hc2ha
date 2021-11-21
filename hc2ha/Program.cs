@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml;
 using hc2ha.Models;
 using MQTTnet;
 using MQTTnet.Client;
@@ -14,9 +15,6 @@ using MQTTnet.Client.Options;
 
 namespace hc2ha
 {
-    
-    
-    
     class Program
     {
         static void Main(string[] args)

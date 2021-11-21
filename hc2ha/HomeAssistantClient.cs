@@ -14,8 +14,8 @@ namespace hc2ha
 {
     public class HomeAssistantClient
     {
-        private IMqttClient _mqttClient;
-        private HomeControlClient _hcClient;
+        private readonly IMqttClient _mqttClient;
+        private readonly HomeControlClient _hcClient;
         
         public HomeAssistantClient(HomeControlClient hcClient)
         {
@@ -42,7 +42,6 @@ namespace hc2ha
 
                 if (device.Type == "action" && device.Model == "light")
                 {
-
                     if (cmd_name == "set")
                     {
                         if (payload == "{\"state\": \"ON\"}")
@@ -132,11 +131,11 @@ namespace hc2ha
             
         }
 
-        public async Task Connect(string ip)
+        public async Task Connect(string ip, int port = 1883)
         {
             var options = new MqttClientOptionsBuilder()
                 .WithClientId("hc2ha")
-                .WithTcpServer(ip, 18803)
+                .WithTcpServer(ip, port)
                 .WithCleanSession()
                 .Build();
             
@@ -155,9 +154,7 @@ namespace hc2ha
                 .Build();
 
             await _mqttClient.PublishAsync(message, CancellationToken.None);
-
             await _mqttClient.SubscribeAsync("homeassistant/" + uuid + "/set");
-
         }
         
         public async Task RegisterSwitch(string name, string uuid)
@@ -175,9 +172,7 @@ namespace hc2ha
                 .Build();
 
             await _mqttClient.PublishAsync(message, CancellationToken.None);
-
             await _mqttClient.SubscribeAsync("homeassistant/" + uuid + "/set");
-
         }
         
     }
