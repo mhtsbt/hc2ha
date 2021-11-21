@@ -10,3 +10,14 @@ Usage through Docker is recommended:
 docker run -e HA_MQTT_IP=xx.xx.xx.xx -e HC_IP=xx.xx.xx.xx -e HC_PASSWORD=niko_hobby_api_password mhtsbt/hc2ha
 ``
 
+or using docker-compose:
+
+```
+hc2ha:
+  image: mhtsbt/hc2ha
+  restart: always
+  environment:
+    - HA_MQTT_IP=xx.xx.xx.xx
+    - HC_IP=xx.xx.xx.xx
+    - HC_PASSWORD=xxx
+```
