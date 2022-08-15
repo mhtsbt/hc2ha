@@ -36,23 +36,30 @@ namespace hc2ha
                 if (topic == "hobby/control/devices/evt")
                 {
                     DeviceChangedMessage msg = JsonSerializer.Deserialize<DeviceChangedMessage>(payload);
-                    
-                    var uuid = msg.Params[0].Devices[0].Uuid;
-                    var device = GetDeviceByUuid(uuid: uuid);
-                    
-                    Console.WriteLine($"Change state uuid: {uuid} status: {msg.Params[0].Devices[0].Properties[0].Status} name: {device.Name} type: {device.Type}");
 
-                    if (device.Type == "virtual")
+
+                    foreach (var device_event in msg.Params[0].Devices)
                     {
-                        OnDeviceStateChanged(new DeviceStatusChangedEvent(msg.Params[0].Devices[0].Uuid,
-                            msg.Params[0].Devices[0].Properties[0].Status));
-                        
-                    } else if (device.Model == "light")
-                    {
-                        OnDeviceStateChanged(new DeviceStatusChangedEvent(msg.Params[0].Devices[0].Uuid,
-                            msg.Params[0].Devices[0].Properties[0].Status));
+
+                        var uuid = device_event.Uuid;
+                        var device = GetDeviceByUuid(uuid: uuid);
+
+                        Console.WriteLine(
+                            $"Change state uuid: {uuid} status: {device_event.Properties[0].Status} name: {device.Name} type: {device.Type}");
+
+                        if (device.Type == "virtual")
+                        {
+                            OnDeviceStateChanged(new DeviceStatusChangedEvent(device_event.Uuid,
+                                device_event.Properties[0].Status));
+
+                        }
+                        else if (device.Model == "light")
+                        {
+                            OnDeviceStateChanged(new DeviceStatusChangedEvent(msg.Params[0].Devices[0].Uuid,
+                                device_event.Properties[0].Status));
+                        }
                     }
-                    
+
                 }
                 else if (topic == "hobby/control/devices/rsp")
                 {
@@ -76,7 +83,7 @@ namespace hc2ha
             {
                 _devices = deviceList.Params[0].Devices;
 
-                var lights = deviceList.Params.First().Devices.Where(x => (x.Type is "relay" or "smartrelay"));
+                var lights = deviceList.Params.First().Devices.Where(x => (x.Type is "relay" || x.Type is "smartrelay"));
                 var virtualDevices = deviceList.Params.First().Devices.Where(x => x.Type == "virtual");
 
                 foreach (var light in lights)
@@ -130,7 +137,7 @@ namespace hc2ha
 
         public Device GetDeviceByUuid(string uuid)
         {
-            return _devices.FirstOrDefault(x => x.Uuid == uuid);
+            return  _devices.FirstOrDefault(x => x.Uuid == uuid);
         }
 
         public async Task<List<Device>> GetDevices()
