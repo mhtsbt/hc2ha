@@ -191,7 +191,7 @@ namespace hc2ha
         {
             var message = new MqttApplicationMessageBuilder()
                 .WithTopic("hobby/control/devices/cmd")
-                .WithPayload("{\"Method\": \"devices.control\",\"Params\": [{\"Devices\": [{\"Properties\": [{\"Brightness\": \"100\"}, {\"Status\": \"On\"}],\"Uuid\": \""+uuid+"\"}]}]}")
+                .WithPayload("{\"Method\": \"devices.control\",\"Params\": [{\"Devices\": [{\"Properties\": [ {\"Status\": \"On\"}],\"Uuid\": \""+uuid+"\"}]}]}")
                 .WithExactlyOnceQoS()
                 .WithRetainFlag()
                 .Build();
@@ -203,7 +203,7 @@ namespace hc2ha
         {
             var message = new MqttApplicationMessageBuilder()
                 .WithTopic("hobby/control/devices/cmd")
-                .WithPayload("{\"Method\": \"devices.control\",\"Params\": [{\"Devices\": [{\"Properties\": [{\"Brightness\": \"100\"}, {\"Status\": \"Off\"}],\"Uuid\": \""+uuid+"\"}]}]}")
+                .WithPayload("{\"Method\": \"devices.control\",\"Params\": [{\"Devices\": [{\"Properties\": [{\"Status\": \"Off\"}],\"Uuid\": \""+uuid+"\"}]}]}")
                 .WithExactlyOnceQoS()
                 .WithRetainFlag()
                 .Build();
