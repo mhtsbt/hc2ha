@@ -149,14 +149,15 @@ namespace hc2ha
                 .WithTopic("hobby/control/devices/cmd")
                 .WithPayload("{\"Method\":\"devices.list\"}")
                 .WithExactlyOnceQoS()
-                .WithRetainFlag()
+                //.WithRetainFlag()
                 .Build();
             
             await _mqttClient.SubscribeAsync(new TopicFilterBuilder().WithTopic("hobby/control/devices/rsp").Build());
-            await _mqttClient.PublishAsync(message, CancellationToken.None);
-
+            
             while (_devices == null)
             {
+                await _mqttClient.PublishAsync(message, CancellationToken.None);
+                Console.WriteLine("waiting for devices");
                 Thread.Sleep(1000);
             }
 
@@ -169,7 +170,7 @@ namespace hc2ha
                 .WithTopic("hobby/control/devices/cmd")
                 .WithPayload("{\"Method\": \"devices.control\",\"Params\": [{\"Devices\": [{\"Properties\": [{\"Status\": \"True\"}],\"Uuid\": \""+uuid+"\"}]}]}")
                 .WithExactlyOnceQoS()
-                .WithRetainFlag()
+                //.WithRetainFlag()
                 .Build();
 
             await _mqttClient.PublishAsync(message, CancellationToken.None);
@@ -181,7 +182,6 @@ namespace hc2ha
                 .WithTopic("hobby/control/devices/cmd")
                 .WithPayload("{\"Method\": \"devices.control\",\"Params\": [{\"Devices\": [{\"Properties\": [{\"Status\": \"False\"}],\"Uuid\": \""+uuid+"\"}]}]}")
                 .WithExactlyOnceQoS()
-                .WithRetainFlag()
                 .Build();
 
             await _mqttClient.PublishAsync(message, CancellationToken.None);
@@ -193,7 +193,6 @@ namespace hc2ha
                 .WithTopic("hobby/control/devices/cmd")
                 .WithPayload("{\"Method\": \"devices.control\",\"Params\": [{\"Devices\": [{\"Properties\": [ {\"Status\": \"On\"}],\"Uuid\": \""+uuid+"\"}]}]}")
                 .WithExactlyOnceQoS()
-                .WithRetainFlag()
                 .Build();
 
             await _mqttClient.PublishAsync(message, CancellationToken.None);
@@ -205,7 +204,6 @@ namespace hc2ha
                 .WithTopic("hobby/control/devices/cmd")
                 .WithPayload("{\"Method\": \"devices.control\",\"Params\": [{\"Devices\": [{\"Properties\": [{\"Status\": \"Off\"}],\"Uuid\": \""+uuid+"\"}]}]}")
                 .WithExactlyOnceQoS()
-                .WithRetainFlag()
                 .Build();
 
             await _mqttClient.PublishAsync(message, CancellationToken.None);

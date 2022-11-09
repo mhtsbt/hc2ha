@@ -98,7 +98,6 @@ namespace hc2ha
                 .WithTopic("homeassistant/" + uuid + "/state")
                 .WithPayload("{\"state\":\""+state+"\"}")
                 .WithExactlyOnceQoS()
-                .WithRetainFlag()
                 .Build();
 
             await _mqttClient.PublishAsync(message, CancellationToken.None);
@@ -118,14 +117,12 @@ namespace hc2ha
             {
                 state = "ON";
             }
-            
+
             var message = new MqttApplicationMessageBuilder()
                 .WithTopic("homeassistant/" + uuid + "/state")
                 .WithPayload(state)
                 .WithExactlyOnceQoS()
-                .WithRetainFlag()
                 .Build();
-            
 
             await _mqttClient.PublishAsync(message, CancellationToken.None);
             
@@ -150,7 +147,6 @@ namespace hc2ha
                 .WithTopic($"homeassistant/light/{uuid}/config")
                 .WithPayload("{\"~\": \"homeassistant/"+uuid+"\",\"name\": \""+name+"\", \"unique_id\": \""+uuid+"\", \"cmd_t\": \"~/set\", \"stat_t\": \"~/state\", \"schema\": \"json\", \"brightness\": false}")
                 .WithExactlyOnceQoS()
-                .WithRetainFlag()
                 .Build();
 
             await _mqttClient.PublishAsync(message, CancellationToken.None);
@@ -168,7 +164,6 @@ namespace hc2ha
                 .WithTopic($"homeassistant/switch/{uuid}/config")
                 .WithPayload("{\"~\": \"homeassistant/"+uuid+"\",\"name\": \""+name+"\", \"command_topic\": \"~/set\", \"state_topic\": \"~/state\"}")
                 .WithExactlyOnceQoS()
-                .WithRetainFlag()
                 .Build();
 
             await _mqttClient.PublishAsync(message, CancellationToken.None);
