@@ -55,7 +55,7 @@ namespace hc2ha
                         }
                         else if (device.Model == "light")
                         {
-                            OnDeviceStateChanged(new DeviceStatusChangedEvent(msg.Params[0].Devices[0].Uuid,
+                            OnDeviceStateChanged(new DeviceStatusChangedEvent(device_event.Uuid,
                                 device_event.Properties[0].Status));
                         }
                     }
