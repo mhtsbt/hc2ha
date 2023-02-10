@@ -3,6 +3,7 @@ using System.Linq;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using hc2ha.Models;
@@ -44,13 +45,19 @@ namespace hc2ha
                 {
                     if (cmd_name == "set")
                     {
-                        if (payload == "{\"state\": \"ON\"}")
+                        var payloadObj = JsonSerializer.Deserialize<LightSetMessage>(payload); 
+
+                        if (payloadObj.state == "ON")
                         {
                             await _hcClient.TurnLightOn(device_uuid);
                         }
-                        else
+                        else if (payloadObj.state == "OFF")
                         {
                             await _hcClient.TurnLightOff(device_uuid);
+                        }
+                        else
+                        {
+                            Console.WriteLine("Did not understand the message");
                         }
                     }
 
