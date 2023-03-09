@@ -151,6 +151,7 @@ namespace hc2ha
             name = name.Replace(' ', '_').ToLower();
             
             var message = new MqttApplicationMessageBuilder()
+                .WithRetainFlag()
                 .WithTopic($"homeassistant/light/{uuid}/config")
                 .WithPayload("{\"~\": \"homeassistant/"+uuid+"\",\"name\": \""+name+"\", \"unique_id\": \""+uuid+"\", \"cmd_t\": \"~/set\", \"stat_t\": \"~/state\", \"schema\": \"json\", \"brightness\": false}")
                 .WithExactlyOnceQoS()
@@ -168,6 +169,7 @@ namespace hc2ha
             Console.WriteLine("{\"~\": \"homeassistant/"+uuid+"\",\"name\": \""+name+"\", \"command_topic\": \"~/set\", \"state_topic\": \"~/state\"}");
             
             var message = new MqttApplicationMessageBuilder()
+                .WithRetainFlag()
                 .WithTopic($"homeassistant/switch/{uuid}/config")
                 .WithPayload("{\"~\": \"homeassistant/"+uuid+"\",\"name\": \""+name+"\", \"command_topic\": \"~/set\", \"state_topic\": \"~/state\"}")
                 .WithExactlyOnceQoS()
