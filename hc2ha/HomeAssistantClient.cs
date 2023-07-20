@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
@@ -13,14 +15,29 @@ using MQTTnet.Client.Options;
 
 namespace hc2ha
 {
+
+    public class SwitchMapping
+    {
+        public string SwitchName { get; set; }
+        public string HaTopic { get; set; }
+    }
+    
     public class HomeAssistantClient
     {
         private readonly IMqttClient _mqttClient;
         private readonly HomeControlClient _hcClient;
-        
+        private readonly List<SwitchMapping> _switchMapping;
+
         public HomeAssistantClient(HomeControlClient hcClient)
         {
             _hcClient = hcClient;
+
+            _switchMapping = new List<SwitchMapping>();
+            _switchMapping.Add(new SwitchMapping()
+            {
+                SwitchName = "stubru_keuken",
+                HaTopic = "hastates/switch/stubru_living2/state"
+            });
             
             // Create a new MQTT client.
             var factory = new MqttFactory();
@@ -34,6 +51,26 @@ namespace hc2ha
             _mqttClient.UseApplicationMessageReceivedHandler(async e =>
             {
                 string payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
+
+                var mappedSwitch = _switchMapping.FirstOrDefault(x => x.HaTopic == e.ApplicationMessage.Topic);
+
+                if (mappedSwitch != null)
+                {
+                    Console.WriteLine("mapped item changed");
+                    var mappedDevice = this._hcClient.GetDeviceByName(name: mappedSwitch.SwitchName);
+
+                    if (payload.ToUpper() == "ON")
+                    {
+                        await _hcClient.TurnVirtualOn(mappedDevice.Uuid);
+                    }
+                    else
+                    {
+                        await _hcClient.TurnVirtualOff(mappedDevice.Uuid);
+                    }
+                    
+                    return;
+                }
+                
                 
                 var topic = e.ApplicationMessage.Topic.Split("/");
                 string device_uuid = topic[1];
@@ -164,19 +201,31 @@ namespace hc2ha
         public async Task RegisterSwitch(string name, string uuid)
         {
             name = name.Replace(' ', '_').ToLower();
+            var mappedItem = _switchMapping.FirstOrDefault(x => x.SwitchName == name);
             
-            Console.WriteLine($"homeassistant/switch/{uuid}/config");
-            Console.WriteLine("{\"~\": \"homeassistant/"+uuid+"\",\"name\": \""+name+"\", \"command_topic\": \"~/set\", \"state_topic\": \"~/state\"}");
-            
-            var message = new MqttApplicationMessageBuilder()
-                .WithRetainFlag()
-                .WithTopic($"homeassistant/switch/{uuid}/config")
-                .WithPayload("{\"~\": \"homeassistant/"+uuid+"\",\"name\": \""+name+"\", \"command_topic\": \"~/set\", \"state_topic\": \"~/state\"}")
-                .WithExactlyOnceQoS()
-                .Build();
+            if (mappedItem != null)
+            {
+                await _mqttClient.SubscribeAsync(mappedItem.HaTopic);
+            }
+            else
+            {
 
-            await _mqttClient.PublishAsync(message, CancellationToken.None);
-            await _mqttClient.SubscribeAsync("homeassistant/" + uuid + "/set");
+                Console.WriteLine($"homeassistant/switch/{uuid}/config");
+                Console.WriteLine("{\"~\": \"homeassistant/" + uuid + "\",\"name\": \"" + name +
+                                  "\", \"command_topic\": \"~/set\", \"state_topic\": \"~/state\"}");
+
+                var message = new MqttApplicationMessageBuilder()
+                    .WithRetainFlag()
+                    .WithTopic($"homeassistant/switch/{uuid}/config")
+                    .WithPayload("{\"~\": \"homeassistant/" + uuid + "\",\"name\": \"" + name +
+                                 "\", \"command_topic\": \"~/set\", \"state_topic\": \"~/state\"}")
+                    .WithExactlyOnceQoS()
+                    .Build();
+
+                await _mqttClient.PublishAsync(message, CancellationToken.None);
+                await _mqttClient.SubscribeAsync("homeassistant/" + uuid + "/set");
+
+            }
         }
         
     }

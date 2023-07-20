@@ -139,6 +139,11 @@ namespace hc2ha
         {
             return  _devices.FirstOrDefault(x => x.Uuid == uuid);
         }
+        
+        public Device GetDeviceByName(string name)
+        {
+            return  _devices.FirstOrDefault(x => x.Name.Replace(' ', '_').ToLower() == name);
+        }
 
         public async Task<List<Device>> GetDevices()
         {
