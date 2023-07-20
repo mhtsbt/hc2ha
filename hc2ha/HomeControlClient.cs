@@ -142,7 +142,7 @@ namespace hc2ha
         
         public Device GetDeviceByName(string name)
         {
-            return  _devices.FirstOrDefault(x => x.Name.Replace(' ', '_').ToLower() == name);
+            return  _devices.FirstOrDefault(x => x.Name.Replace(' ', '_').ToLower() == name && x.Type == "virtual");
         }
 
         public async Task<List<Device>> GetDevices()

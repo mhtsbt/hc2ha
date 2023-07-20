@@ -53,6 +53,7 @@ namespace hc2ha
                 string payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
 
                 var mappedSwitch = _switchMapping.FirstOrDefault(x => x.HaTopic == e.ApplicationMessage.Topic);
+                Console.WriteLine(e.ApplicationMessage.Topic);
 
                 if (mappedSwitch != null)
                 {
