@@ -50,13 +50,13 @@ namespace hc2ha
                         if (device.Type == "virtual")
                         {
                             OnDeviceStateChanged(new DeviceStatusChangedEvent(device_event.Uuid,
-                                device_event.Properties[0].Status));
+                                device_event.Properties[0].Status, "hc"));
 
                         }
                         else if (device.Model == "light")
                         {
                             OnDeviceStateChanged(new DeviceStatusChangedEvent(device_event.Uuid,
-                                device_event.Properties[0].Status));
+                                device_event.Properties[0].Status, "hc"));
                         }
                     }
 

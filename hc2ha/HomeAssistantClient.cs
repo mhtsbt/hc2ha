@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net.Http;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -20,6 +21,7 @@ namespace hc2ha
     {
         public string SwitchName { get; set; }
         public string HaTopic { get; set; }
+        public string HaName { get; set; }  
     }
     
     public class HomeAssistantClient
@@ -27,16 +29,21 @@ namespace hc2ha
         private readonly IMqttClient _mqttClient;
         private readonly HomeControlClient _hcClient;
         private readonly List<SwitchMapping> _switchMapping;
+        
+        private readonly string _restApiKey = "";
 
         public HomeAssistantClient(HomeControlClient hcClient)
         {
             _hcClient = hcClient;
+            
+            _restApiKey = Environment.GetEnvironmentVariable("HA_REST_KEY");
 
             _switchMapping = new List<SwitchMapping>();
             _switchMapping.Add(new SwitchMapping()
             {
                 SwitchName = "stubru_keuken",
-                HaTopic = "hastates/switch/stubru_living2/state"
+                HaTopic = "hastates/switch/stubru_living2/state",
+                HaName = "stubru_living2"
             });
             
             // Create a new MQTT client.
@@ -126,7 +133,7 @@ namespace hc2ha
             }
             else
             {
-                await SetStateOfSwitch(e.DeviceId, e.NewState);
+                await SetStateOfSwitch(device, e.NewState);
             }
         }
 
@@ -149,28 +156,55 @@ namespace hc2ha
             
         }
         
-        private async Task SetStateOfSwitch(string uuid, string state)
+        private async Task SetStateOfSwitch(Device device, string state)
         {
+            var deviceName = device.Name.Replace(' ', '_').ToLower();
+            var mappedDevice = _switchMapping.FirstOrDefault(x => x.SwitchName == deviceName);
+            
             Console.WriteLine($"state: {state}");
-            state = state.ToUpper();
 
-            if (state == "FALSE")
+            if (mappedDevice != null)
             {
-                state = "OFF";
+
+                string service =  (state.ToUpper() == "FALSE") ? "turn_off" : "turn_on";
+                
+                // use HA rest api, cannot use mqtt
+                using (var client = new HttpClient())
+                {
+                    var content = new StringContent("{\"entity_id\": \"switch."+mappedDevice.HaName+"\"}", Encoding.UTF8, "application/json");
+                    client.DefaultRequestHeaders.Add("Authorization", $"Bearer {_restApiKey}");
+                    var request = client.PostAsync($"https://ha.epsgreedy.be/api/services/switch/{service}", content);
+                    var response = await request.Result.Content.ReadAsStringAsync();
+                    Console.WriteLine($"REST {service} result: {response}");
+                    
+                }
             }
             else
             {
-                state = "ON";
+                // device is configured through mqtt
+                
+
+                state = state.ToUpper();
+
+                if (state == "FALSE")
+                {
+                    state = "OFF";
+                }
+                else
+                {
+                    state = "ON";
+                }
+
+                var message = new MqttApplicationMessageBuilder()
+                    .WithTopic("homeassistant/" + device.Uuid + "/state")
+                    .WithPayload(state)
+                    .WithExactlyOnceQoS()
+                    .Build();
+
+                await _mqttClient.PublishAsync(message, CancellationToken.None);
+
             }
 
-            var message = new MqttApplicationMessageBuilder()
-                .WithTopic("homeassistant/" + uuid + "/state")
-                .WithPayload(state)
-                .WithExactlyOnceQoS()
-                .Build();
-
-            await _mqttClient.PublishAsync(message, CancellationToken.None);
-            
         }
 
         public async Task Connect(string ip, int port = 1883)
